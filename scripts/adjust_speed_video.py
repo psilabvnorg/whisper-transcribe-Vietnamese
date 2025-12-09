@@ -30,6 +30,54 @@ def get_video_duration(video_path):
         sys.exit(1)
 
 
+def get_video_codec(video_path):
+    """Get video codec name using ffprobe."""
+    cmd = [
+        'ffprobe',
+        '-v', 'error',
+        '-select_streams', 'v:0',
+        '-show_entries', 'stream=codec_name',
+        '-of', 'default=noprint_wrappers=1:nokey=1',
+        str(video_path)
+    ]
+    
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting video codec: {e}")
+        return None
+
+
+def convert_av1_to_h264(input_video):
+    """Convert AV1 video to H.264 to avoid hardware decoding issues."""
+    output_video = input_video.parent / f"{input_video.stem}_h264.mp4"
+    
+    print(f"\n🔄 Converting AV1 to H.264 (this may take a while)...")
+    print("Using software decoding for AV1...")
+    
+    # Use explicit software AV1 decoder
+    cmd = [
+        'ffmpeg',
+        '-c:v', 'av1',  # Explicit software AV1 decoder
+        '-i', str(input_video),
+        '-c:v', 'mpeg4',  # Software encoder (most compatible)
+        '-q:v', '3',  # Good quality for mpeg4
+        '-c:a', 'copy',
+        '-y',
+        str(output_video)
+    ]
+    
+    try:
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        print(f"✅ Conversion complete: {output_video}")
+        return output_video
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Error converting video:")
+        print(f"stderr: {e.stderr}")
+        sys.exit(1)
+
+
 def adjust_video_speed(input_video, output_video, target_duration=None, speed_factor=None):
     """
     Adjust video speed to match target duration or by a speed factor.
@@ -43,6 +91,20 @@ def adjust_video_speed(input_video, output_video, target_duration=None, speed_fa
     input_path = Path(input_video)
     if not input_path.exists():
         print(f"Error: Input video not found: {input_video}")
+        sys.exit(1)
+    
+    # Check if video is AV1 and convert if needed
+    codec = get_video_codec(input_path)
+    print(f"Video codec: {codec}")
+    
+    if codec == 'av1':
+        print("\n⚠️  ERROR: AV1 codec detected!")
+        print("Your ffmpeg build has a broken AV1 decoder.")
+        print("\nSOLUTION: Re-download the video in H.264 format:")
+        print("  1. The download script has been updated to prefer H.264")
+        print("  2. Re-run: python scripts/download_youtube_video.py <URL>")
+        print("\nAlternatively, you can manually convert the video on another machine")
+        print("or use an online converter to H.264 format.")
         sys.exit(1)
     
     # Get original duration
@@ -64,15 +126,14 @@ def adjust_video_speed(input_video, output_video, target_duration=None, speed_fa
     # Calculate setpts value (inverse of speed)
     setpts_value = 1.0 / speed_factor
     
-    # Build ffmpeg command
+    # Build ffmpeg command - now using H.264 input (converted if needed)
     cmd = [
         'ffmpeg',
         '-i', str(input_path),
         '-filter:v', f'setpts={setpts_value}*PTS',
         '-filter:a', f'atempo={speed_factor}' if speed_factor <= 2.0 else f'atempo=2.0,atempo={speed_factor/2.0}',
-        '-c:v', 'libx264',
-        '-preset', 'medium',
-        '-crf', '23',
+        '-c:v', 'h264_nvenc',
+        '-b:v', '2M',
         '-c:a', 'aac',
         '-b:a', '192k',
         '-y',  # Overwrite output
@@ -165,4 +226,4 @@ Examples:
 if __name__ == "__main__":
     main()
 
-# python scripts/adjust_speed_video.py "/home/psilab/TRANSCRIBE-AUDIO-TO-TEXT-WHISPER/temp/downloads/EQ1JUda3tYk_Cách sửa xe điện Vinfast Klara đơn giản _ EAC (PHẦ/video.mp4" output.mp4 --target-duration 60
+# python scripts/adjust_speed_video.py "/home/psilab/TRANSCRIBE-AUDIO-TO-TEXT-WHISPER/temp/downloads/202512051057/video.mp4" output_adjust_speed.mp4 --target-duration 781

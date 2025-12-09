@@ -566,4 +566,4 @@ Available models:
 if __name__ == "__main__":
     main()
 
-#cd /home/psilab/VidLipSyncVoice && python scripts/transcribe_phowhisper.py "temp/downloads/sua_xe_vf/audio_transcription_with_punctuation.json"
+# python scripts/transcribe_phowhisper.py temp/downloads/202512051057/audio.wav --model phowhisper

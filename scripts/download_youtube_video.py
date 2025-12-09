@@ -83,9 +83,9 @@ def download_youtube_video(url, output_dir="input/youtube", verbose=True):
         print(f"Error extracting video info: {e}")
         sys.exit(1)
     
-    # Create video-specific directory
-    sanitized_title = sanitize_filename(video_title)[:50]  # Limit length
-    video_dir = output_path / f"{video_id}_{sanitized_title}"
+    # Create video-specific directory with timestamp format
+    timestamp = datetime.now().strftime("%Y%m%d%H%M")
+    video_dir = output_path / timestamp
     video_dir.mkdir(parents=True, exist_ok=True)
     
     # Define output paths
@@ -95,11 +95,12 @@ def download_youtube_video(url, output_dir="input/youtube", verbose=True):
     metadata_output = video_dir / "metadata.json"
     
     # Configure yt-dlp options for video download
+    # Prefer H.264 (avc1) over AV1 to avoid ffmpeg compatibility issues
     if verbose:
         print(f"\n[1/3] Downloading video...")
     
     ydl_opts_video = {
-        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+        'format': 'bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
         'outtmpl': str(video_output),
         'quiet': not verbose,
         'no_warnings': not verbose,
@@ -293,4 +294,4 @@ Examples:
 if __name__ == "__main__":
     main()
 
-# python3 scripts/download_youtube_video.py "https://www.youtube.com/watch?v=Ebvur9BzJEs" --output temp/downloads
+# python scripts/download_youtube_video.py "https://www.youtube.com/watch?v=MDWHjdGObKw" --output temp/downloads

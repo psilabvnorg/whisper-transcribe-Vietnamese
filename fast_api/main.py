@@ -6,7 +6,9 @@ Output: Transcribed text
 """
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse, FileResponse, PlainTextResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 import tempfile
 import os
@@ -30,6 +32,21 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs"
 )
+
+# Enable CORS for local development and simple frontends
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Serve static files
+STATIC_DIR = Path(__file__).parent / "static"
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    app.mount("/ui", StaticFiles(directory=str(STATIC_DIR), html=True), name="ui")
 
 # Configure model path (adjust as needed)
 MODEL_PATH = "/home/psilab/TRANSCRIBE-AUDIO-TO-TEXT-WHISPER/model/snapshots/55a7e3eb6c906de891f8f06a107754427dd3be79"
@@ -56,15 +73,13 @@ def clean_unk_tokens(text):
 
 
 @app.get("/")
-async def root():
-    """Root endpoint with API information."""
-    return {
-        "message": "Audio Transcription API",
-        "endpoints": {
-            "/transcribe": "POST - Upload WAV file for transcription",
-            "/health": "GET - Health check"
-        }
-    }
+def read_root():
+    """Serve the frontend at root path."""
+    index_path = STATIC_DIR / "index.html"
+    if index_path.exists():
+        return FileResponse(str(index_path))
+    # Fallback: redirect to static path
+    return RedirectResponse(url="/static/index.html")
 
 
 @app.get("/health")
@@ -83,18 +98,18 @@ async def transcribe_audio(
     Transcribe audio file to text.
     
     Args:
-        file: WAV audio file
+        file: WAV or MP3 audio file
         language: Language code (default: "vi" for Vietnamese)
         add_punctuation: Whether to restore punctuation (default: True)
     
     Returns:
-        JSON with transcribed text and metadata
+        Plain text file with transcribed text and metadata
     """
     # Validate file extension
-    if not file.filename.lower().endswith('.wav'):
+    if not (file.filename.lower().endswith('.wav') or file.filename.lower().endswith('.mp3')):
         raise HTTPException(
             status_code=400,
-            detail="Only WAV files are supported. Please upload a .wav file."
+            detail="Only WAV and MP3 files are supported. Please upload a .wav or .mp3 file."
         )
     
     # Check if transcription function is available
@@ -106,7 +121,9 @@ async def transcribe_audio(
     
     # Create temporary file to save uploaded audio
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
+        # Get file extension
+        file_ext = '.wav' if file.filename.lower().endswith('.wav') else '.mp3'
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_file:
             # Write uploaded file to temporary file
             content = await file.read()
             temp_file.write(content)
@@ -126,19 +143,21 @@ async def transcribe_audio(
         
         # Clean up unk tokens from the text
         cleaned_text = clean_unk_tokens(result['text'])
-        cleaned_text_no_punct = clean_unk_tokens(result.get('text_no_punctuation', ''))
         
-        # Return results (FastAPI will auto-serialize dict with proper UTF-8)
-        return {
-            "success": True,
-            "filename": file.filename,
-            "text": cleaned_text,
-            "text_no_punctuation": cleaned_text_no_punct,
-            "language": result['language'],
-            "duration": result['duration'],
-            "segments_count": len(result['segments']),
-            "punctuation_restored": result.get('punctuation_restored', False)
-        }
+        # Create text file content with metadata as comments
+        output_text = f"# Transcription of: {file.filename}\n"
+        output_text += f"# Language: {result['language']}\n"
+        output_text += f"# Duration: {result['duration']:.2f}s\n"
+        output_text += f"# Segments: {len(result['segments'])}\n"
+        output_text += f"# Punctuation restored: {result.get('punctuation_restored', False)}\n"
+        output_text += f"# ----------------------------------------\n\n"
+        output_text += cleaned_text
+        
+        # Return as plain text
+        return PlainTextResponse(
+            content=output_text,
+            media_type="text/plain; charset=utf-8"
+        )
         
     except FileNotFoundError as e:
         raise HTTPException(

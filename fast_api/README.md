@@ -25,18 +25,18 @@ chmod +x start.sh
 ./start.sh
 ```
 
-The API will be available at `http://localhost:8000`
+The API will be available at `http://localhost:8001`
 
 ### API Endpoints
 
 #### 1. Health Check
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8001/health
 ```
 
 #### 2. Transcribe Audio
 ```bash
-curl -X POST http://localhost:8000/transcribe \
+curl -X POST http://localhost:8001/transcribe \
   -F "file=@/path/to/audio.wav" \
   -F "language=vi" \
   -F "add_punctuation=true"
@@ -44,7 +44,7 @@ curl -X POST http://localhost:8000/transcribe \
 
 ### Interactive API Documentation
 
-Visit `http://localhost:8000/docs` for interactive Swagger UI documentation.
+Visit `http://localhost:8001/docs` for interactive Swagger UI documentation.
 
 ## Test the API
 

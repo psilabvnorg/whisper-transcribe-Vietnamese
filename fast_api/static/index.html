@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/wavesurfer.js@7"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/translations.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -35,11 +36,31 @@
     <header class="flex items-center justify-between mb-8">
       <div class="flex items-center gap-3">
         <img src="/static/images/psi-lab.jpg" alt="PSI Lab" class="h-10 w-10 rounded-lg" />
-        <h1 class="text-2xl font-bold text-white">Audio Transcription</h1>
+        <h1 class="text-2xl font-bold text-white" data-i18n="appTitle">Audio Transcription</h1>
       </div>
-      <div id="status-pill" class="flex items-center gap-2 px-3 py-1.5 bg-emerald-950/40 text-emerald-400 text-sm font-medium rounded-full border border-emerald-400/20">
-        <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-        Online
+      <div class="flex items-center gap-3">
+        <!-- Language Toggle -->
+        <div class="flex gap-1 bg-dark-panel rounded-lg p-1 border border-dark-border">
+          <button id="lang-vn" class="px-2 py-1 rounded transition-colors text-gray-400 hover:bg-gray-600" onclick="switchLanguage('vi')" aria-label="Tiếng Việt">
+            <svg class="w-5 h-4" viewBox="0 0 30 20" fill="none">
+              <rect width="30" height="20" fill="#DA251D"/>
+              <path d="M15 4L16.854 9.764H22.929L17.537 13.472L19.391 19.236L15 15.528L10.609 19.236L12.463 13.472L7.071 9.764H13.146L15 4Z" fill="#FFCD00"/>
+            </svg>
+          </button>
+          <button id="lang-en" class="px-2 py-1 rounded transition-colors bg-white text-gray-900" onclick="switchLanguage('en')" aria-label="English">
+            <svg class="w-5 h-4" viewBox="0 0 30 20" fill="none">
+              <rect width="30" height="20" fill="#012169"/>
+              <path d="M0 0L30 20M30 0L0 20" stroke="white" stroke-width="4"/>
+              <path d="M0 0L30 20M30 0L0 20" stroke="#C8102E" stroke-width="2.5"/>
+              <path d="M15 0V20M0 10H30" stroke="white" stroke-width="6"/>
+              <path d="M15 0V20M0 10H30" stroke="#C8102E" stroke-width="4"/>
+            </svg>
+          </button>
+        </div>
+        <div id="status-pill" class="flex items-center gap-2 px-3 py-1.5 bg-emerald-950/40 text-emerald-400 text-sm font-medium rounded-full border border-emerald-400/20">
+          <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+          <span data-i18n="online">Online</span>
+        </div>
       </div>
     </header>
 
@@ -52,7 +73,7 @@
           <div>
             <label for="audio" class="block text-sm font-medium text-gray-400 mb-2">
               <i data-lucide="upload" class="w-4 h-4 inline mr-1"></i>
-              Audio File
+              <span data-i18n="audioFile">Audio File</span>
             </label>
             <div class="relative">
               <input 
@@ -63,7 +84,7 @@
                 class="block w-full text-sm text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer cursor-pointer bg-gray-900/50 border border-dark-border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed file:disabled:bg-gray-600 file:disabled:cursor-not-allowed"
               />
             </div>
-            <p class="mt-2 text-xs text-gray-500">Supported formats: .wav, .mp3</p>
+            <p class="mt-2 text-xs text-gray-500" data-i18n="supportedFormats">Supported formats: .wav, .mp3</p>
           </div>
 
           <!-- Waveform Display -->
@@ -73,7 +94,7 @@
               <div class="flex items-center justify-between mt-3 text-sm text-gray-400">
                 <button id="playPauseBtn" class="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
                   <i data-lucide="play" class="w-4 h-4"></i>
-                  <span>Play</span>
+                  <span data-i18n="play">Play</span>
                 </button>
                 <span id="waveformTime">0:00 / 0:00</span>
               </div>
@@ -84,14 +105,14 @@
           <div>
             <label for="language" class="block text-sm font-medium text-gray-400 mb-2">
               <i data-lucide="languages" class="w-4 h-4 inline mr-1"></i>
-              Language
+              <span data-i18n="language">Language</span>
             </label>
             <select 
               id="language" 
               name="language" 
               class="block w-full px-4 py-2.5 bg-gray-900/50 border border-dark-border text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="vi" selected>Vietnamese (vi)</option>
+              <option value="vi" selected data-i18n="vietnameseVi">Vietnamese (vi)</option>
             </select>
           </div>
         </div>
@@ -106,7 +127,7 @@
             class="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-lg hover:shadow-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <i data-lucide="zap" class="w-5 h-5"></i>
-            Generate Transcript
+            <span data-i18n="generateTranscript">Generate Transcript</span>
           </button>
           <button 
             id="btnReset" 
@@ -114,14 +135,14 @@
             class="flex items-center gap-2 px-6 py-2.5 bg-transparent hover:bg-gray-800 text-gray-300 font-semibold rounded-lg border border-dark-border transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
           >
             <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-            Reset
+            <span data-i18n="reset">Reset</span>
           </button>
           <div id="progress" class="hidden items-center gap-2 text-gray-400">
             <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span>Transcribing…</span>
+            <span data-i18n="transcribing">Transcribing…</span>
           </div>
         </div>
         <div id="error" class="hidden mt-4 p-3 bg-red-950/40 border border-red-500/30 text-red-400 rounded-lg" role="alert"></div>
@@ -132,7 +153,7 @@
         <div class="flex items-center justify-between mb-3">
           <label class="text-sm font-medium text-gray-400">
             <i data-lucide="file-text" class="w-4 h-4 inline mr-1"></i>
-            Transcribed Text
+            <span data-i18n="transcribedText">Transcribed Text</span>
           </label>
           <div class="flex items-center gap-2">
             <button 
@@ -140,18 +161,18 @@
               class="hidden items-center gap-1 px-3 py-1 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded transition"
             >
               <i data-lucide="download" class="w-3 h-3"></i>
-              Download TXT
+              <span data-i18n="downloadTxt">Download TXT</span>
             </button>
             <button 
               id="btnCopy" 
               class="flex items-center gap-1 px-3 py-1 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded transition"
             >
               <i data-lucide="copy" class="w-3 h-3"></i>
-              Copy
+              <span data-i18n="copy">Copy</span>
             </button>
           </div>
         </div>
-        <pre id="resultJson" class="bg-gray-950 border border-dark-border rounded-lg p-4 text-sm text-gray-300 overflow-x-auto max-h-96 whitespace-pre-wrap">Not transcribed yet</pre>
+        <pre id="resultJson" class="bg-gray-950 border border-dark-border rounded-lg p-4 text-sm text-gray-300 overflow-x-auto max-h-96 whitespace-pre-wrap" data-i18n="notTranscribedYet">Not transcribed yet</pre>
       </div>
     </div>
   </div>
@@ -160,7 +181,7 @@
   <footer class="mt-6 py-4 bg-dark-panel border-t border-dark-border">
     <div class="container mx-auto max-w-5xl px-4">
       <div class="flex flex-col items-center gap-3">
-        <p class="text-gray-400 text-sm font-medium">Psi Technology © 2025</p>
+        <p class="text-gray-400 text-sm font-medium" data-i18n="copyright">Psi Technology © 2025</p>
         <div class="flex gap-3">
           <a href="https://xechohang.vn/" target="_blank" rel="noopener noreferrer" 
              class="w-14 h-14 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors overflow-hidden">
@@ -242,7 +263,7 @@
       });
 
       wavesurfer.on('finish', () => {
-        $playPauseBtn.querySelector('span').textContent = 'Play';
+        $playPauseBtn.querySelector('span').textContent = t('play');
         updatePlayIcon('play');
       });
 
@@ -296,11 +317,11 @@
       
       if (wavesurfer.isPlaying()) {
         wavesurfer.pause();
-        $playPauseBtn.querySelector('span').textContent = 'Play';
+        $playPauseBtn.querySelector('span').textContent = t('play');
         updatePlayIcon('play');
       } else {
         wavesurfer.play();
-        $playPauseBtn.querySelector('span').textContent = 'Pause';
+        $playPauseBtn.querySelector('span').textContent = t('pause');
         updatePlayIcon('pause');
       }
     });
@@ -310,7 +331,7 @@
       try {
         await navigator.clipboard.writeText($resultJson.textContent);
         const originalText = $btnCopy.innerHTML;
-        $btnCopy.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Copied!';
+        $btnCopy.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> <span data-i18n="copied">' + t('copied') + '</span>';
         lucide.createIcons();
         setTimeout(() => {
           $btnCopy.innerHTML = originalText;
@@ -344,6 +365,12 @@
       $error.classList.add('flex');
     }
 
+    function showErrorKey(key) {
+      $error.textContent = t(key);
+      $error.classList.remove('hidden');
+      $error.classList.add('flex');
+    }
+
     function hideError() {
       $error.classList.add('hidden');
       $error.classList.remove('flex');
@@ -354,13 +381,13 @@
       const file = $audio.files && $audio.files[0];
       
       if (!file) {
-        showError('Please select an audio file to transcribe.');
+        showErrorKey('errorSelectFile');
         return;
       }
       
       const fileName = file.name.toLowerCase();
       if (!fileName.endsWith('.wav') && !fileName.endsWith('.mp3')) {
-        showError('Only .wav and .mp3 files are supported by the API.');
+        showErrorKey('errorUnsupportedFormat');
         return;
       }
 
@@ -381,8 +408,8 @@
         });
         
         if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ detail: 'Transcription failed' }));
-          showError(errorData.detail || 'Transcription failed.');
+          const errorData = await res.json().catch(() => ({ detail: t('errorTranscriptionFailed') }));
+          showError(errorData.detail || t('errorTranscriptionFailed'));
           $btnDownload.classList.add('hidden');
           $btnDownload.classList.remove('flex');
           currentTranscription = null;
@@ -400,7 +427,7 @@
           $btnDownload.classList.add('flex');
         }
       } catch (err) {
-        showError('Network error: ' + err.message);
+        showError(t('errorNetwork') + ' ' + err.message);
         $btnDownload.classList.add('hidden');
         $btnDownload.classList.remove('flex');
         currentTranscription = null;
@@ -420,7 +447,7 @@
         wavesurfer.stop();
         wavesurfer.empty();
       }
-      $resultJson.textContent = 'Not transcribed yet';
+      $resultJson.textContent = t('notTranscribedYet');
       hideError();
       $btnDownload.classList.add('hidden');
       $btnDownload.classList.remove('flex');
